@@ -5,7 +5,11 @@ import (
 	"log"
 	"net"
 	"sync"
+	"strings"
+	"fmt"
+	"strconv"
 
+	"github.com/SteinArildN/funtemps/conv"
 	"github.com/SteinArildN/is105sem03/mycrypt"
 )
 
@@ -38,12 +42,32 @@ func main() {
 						}
 						return // fra for løkke
 					}
-					dekryptertMelding := mycrypt.Krypter([]rune(string(buf[:n])), mycrypt.ALF_SEM03, len(mycrypt.ALF_SEM03)-4)
+					dekryptertMelding := mycrypt.Krypter([]rune(string(buf[:n])), mycrypt.ALF_SEM03, len(mycrypt.ALF_SEM03) - 4)
 					log.Println("Dekrypter melding: ", string(dekryptertMelding))
-					//switch msg := string(dekrypterMelding) {
-					switch msg := string(buf[:n]); msg {
+					//log.Println(buf[:n])
+					switch msg := string(dekryptertMelding[:n]); msg {
+					//log.Println(dekryptertMelding)
+					//switch msg := string(buf[:n]); msg {
   				        case "ping":
-						_, err = c.Write([]byte("pong"))
+						//_, err = c.Write([]byte("pong"))
+						kryptertPong := mycrypt.Krypter([]rune(string("pong")), mycrypt.ALF_SEM03, 4)
+						_, err = c.Write([]byte(string(kryptertPong[:n])))
+					case "Kjevik;SN39040;18.03.2022 01:50;6":
+						////fahr := 0
+						elementArray := strings.Split(msg, ";")
+						celsius, _ := strconv.ParseFloat(elementArray[3], 64)
+						fahr := conv.CelsiusToFahrenheit(celsius)
+						newEArray := []string{elementArray[0], elementArray[1], elementArray[2], fmt.Sprintf("%v",fahr)}
+						log.Println(newEArray)
+						//fahr := conv.CelsiusToFahrenheit(celsius)
+						finalString := strings.Join(newEArray, ";")// + ";" + fmt.Sprintf("%v", fahr)
+						log.Println(finalString)
+						//_, err c.Write(elementArray[0] + elementArray[1] + elementArray[2] + fahr)
+						kryptertString := mycrypt.Krypter([]rune(string(finalString)), mycrypt.ALF_SEM03, 4)
+						log.Println(string(kryptertString))
+						_, err = c.Write([]byte(string(kryptertString[:len(kryptertString)])))
+						//c.Write([]byte(finalString))
+						//_, err = c.Write([]byte("jippi"))
 					default:
 						_, err = c.Write(buf[:n])
 					}
